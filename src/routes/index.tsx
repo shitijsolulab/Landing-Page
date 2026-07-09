@@ -1,5 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Clock, Moon, Sparkles, Sun } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  Clock,
+  Moon,
+  ShieldCheck,
+  Sparkles,
+  Sun,
+  X,
+  Zap,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiError, api } from "../lib/api";
@@ -68,7 +79,10 @@ const INDUSTRY_CONTENT: Record<string, IndustryContent> = {
         { name: "File Storage", use: "Access documents from your team drive." },
       ],
       composio: [
-        { name: "Line-of-Business System", use: "Bring your own — we scope the integration with you." },
+        {
+          name: "Line-of-Business System",
+          use: "Bring your own — we scope the integration with you.",
+        },
       ],
     },
   },
@@ -83,10 +97,19 @@ const INDUSTRY_CONTENT: Record<string, IndustryContent> = {
       steps: [
         { label: "Vendor emails invoice", detail: "Nango retrieves the message and attachment." },
         { label: "OCR extracts data", detail: "Line items, totals, and vendor info parsed." },
-        { label: "Composio checks records", detail: "Vendor lookup + duplicate flag against QuickBooks/Xero." },
-        { label: "AI drafts validation", detail: "Summary of matches, mismatches, and policy issues." },
+        {
+          label: "Composio checks records",
+          detail: "Vendor lookup + duplicate flag against QuickBooks/Xero.",
+        },
+        {
+          label: "AI drafts validation",
+          detail: "Summary of matches, mismatches, and policy issues.",
+        },
         { label: "Human approves", detail: "Controller clicks approve in one screen." },
-        { label: "Composio posts entry", detail: "Invoice created and confirmation emailed via Nango." },
+        {
+          label: "Composio posts entry",
+          detail: "Invoice created and confirmation emailed via Nango.",
+        },
       ],
     },
     connectors: {
@@ -118,10 +141,16 @@ const INDUSTRY_CONTENT: Record<string, IndustryContent> = {
       steps: [
         { label: "Contract arrives", detail: "Nango pulls the attachment from email." },
         { label: "OCR parses it", detail: "Clauses, parties, and dates extracted." },
-        { label: "Composio pulls precedent", detail: "Prior matters and the firm's playbook loaded." },
+        {
+          label: "Composio pulls precedent",
+          detail: "Prior matters and the firm's playbook loaded.",
+        },
         { label: "AI flags risk", detail: "Missing clauses, deviations, and red-flag terms." },
         { label: "Lawyer reviews", detail: "Summary + inline suggestions in one view." },
-        { label: "Nango sends it back", detail: "Reviewed contract returned via Outlook or Gmail." },
+        {
+          label: "Nango sends it back",
+          detail: "Reviewed contract returned via Outlook or Gmail.",
+        },
       ],
     },
     connectors: {
@@ -157,9 +186,18 @@ const INDUSTRY_CONTENT: Record<string, IndustryContent> = {
       after: "Draft response ready in minutes, PM approves and sends.",
       steps: [
         { label: "Contractor raises RFI", detail: "Nango retrieves the email or Teams message." },
-        { label: "Docs parsed", detail: "OCR + document intelligence read attachments and drawings." },
-        { label: "Composio pulls project data", detail: "Drawings, schedules, and specs from Procore/ACC." },
-        { label: "AI drafts a response", detail: "Grounded in the project record, cites drawing refs." },
+        {
+          label: "Docs parsed",
+          detail: "OCR + document intelligence read attachments and drawings.",
+        },
+        {
+          label: "Composio pulls project data",
+          detail: "Drawings, schedules, and specs from Procore/ACC.",
+        },
+        {
+          label: "AI drafts a response",
+          detail: "Grounded in the project record, cites drawing refs.",
+        },
         { label: "PM approves", detail: "One-click approval with edits inline." },
         { label: "Nango sends reply", detail: "Response goes back over email or Teams." },
       ],
@@ -192,6 +230,435 @@ function getContent(slug: string): IndustryContent {
   return INDUSTRY_CONTENT[slug] ?? INDUSTRY_CONTENT.common;
 }
 
+// ---------------- Copilot library (interactive catalog) ----------------
+
+type CopilotGroup = "accounting" | "construction" | "legal";
+
+type Copilot = {
+  group: CopilotGroup;
+  label: string;
+  title: string;
+  goal: string;
+  persona: string;
+  approver: string;
+  trigger: string;
+  actions: string[];
+  value: string[];
+  // The live trace shown in the modal — each line mirrors what the copilot does.
+  trace: { kind: "run" | "ok" | "wait" | "done"; text: string }[];
+  runtime: string;
+};
+
+const COPILOT_GROUPS: { slug: CopilotGroup | "all"; label: string }[] = [
+  { slug: "all", label: "All" },
+  { slug: "accounting", label: "Accounting" },
+  { slug: "construction", label: "Construction" },
+  { slug: "legal", label: "Legal" },
+];
+
+const GROUP_META: Record<CopilotGroup, { label: string; accent: string }> = {
+  // Accent is applied as an inline text color so each family reads distinctly
+  // without leaving the neutral theme.
+  accounting: { label: "Accounting", accent: "#4f9dde" },
+  construction: { label: "Construction", accent: "#e0912f" },
+  legal: { label: "Legal", accent: "#a988e6" },
+};
+
+const COPILOTS: Copilot[] = [
+  {
+    group: "accounting",
+    label: "Accounting",
+    title: "Invoice Processing & Approval Copilot",
+    goal: "Validate supplier invoices, catch duplicates, and route them for finance approval.",
+    persona: "AP Accountant",
+    approver: "Finance Manager",
+    trigger: "A supplier sends an invoice to your inbox.",
+    actions: [
+      "Reads and extracts invoice details automatically",
+      "Matches the invoice to the right vendor",
+      "Checks for duplicate or repeat invoices",
+      "Flags missing or unusual information",
+      "Writes a plain-language validation summary",
+    ],
+    value: [
+      "Fewer manual entries",
+      "Duplicate invoices caught before payment",
+      "Faster approval cycles",
+      "More consistent invoice accuracy",
+    ],
+    runtime: "2m 41s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "reading inbox" },
+      { kind: "ok", text: "reading invoice_0417.pdf" },
+      { kind: "ok", text: "matched to vendor: Acme Supplies" },
+      { kind: "ok", text: "no duplicate found" },
+      { kind: "ok", text: "validation summary ready" },
+      { kind: "wait", text: "waiting on approval (Finance Manager)" },
+      { kind: "ok", text: "approved by A. Reyes" },
+      { kind: "ok", text: "invoice created · confirmation sent" },
+      { kind: "done", text: "done in 2m 41s" },
+    ],
+  },
+  {
+    group: "accounting",
+    label: "Accounting",
+    title: "Financial Reporting Copilot",
+    goal: "Turn raw ledger data into an executive-ready report, complete with commentary.",
+    persona: "Financial Controller",
+    approver: "CFO",
+    trigger: "You choose a reporting period from the dashboard.",
+    actions: [
+      "Pulls the latest financial and budget data",
+      "Compares actuals against budget",
+      "Calculates key financial metrics",
+      "Flags unusual trends automatically",
+      "Writes an executive summary in plain language",
+    ],
+    value: [
+      "Faster month-end reporting",
+      "Consistent, ready-to-send insights",
+      "Less time in spreadsheets",
+      "Earlier visibility into variances",
+    ],
+    runtime: "3m 05s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "pulling ledger + budget data" },
+      { kind: "ok", text: "actuals vs budget computed" },
+      { kind: "ok", text: "3 variances flagged" },
+      { kind: "ok", text: "executive summary drafted" },
+      { kind: "wait", text: "waiting on approval (CFO)" },
+      { kind: "ok", text: "approved by J. Lin" },
+      { kind: "done", text: "done in 3m 05s" },
+    ],
+  },
+  {
+    group: "accounting",
+    label: "Accounting",
+    title: "Expense Audit Copilot",
+    goal: "Check employee expense claims against policy before you reimburse them.",
+    persona: "Expense Auditor",
+    approver: "Finance Manager",
+    trigger: "An employee uploads a receipt or expense claim.",
+    actions: [
+      "Reads receipts and expense details automatically",
+      "Checks the merchant, amount, and category",
+      "Flags duplicate claims",
+      "Checks the claim against company policy",
+      "Writes a short audit summary",
+    ],
+    value: [
+      "Lower reimbursement fraud risk",
+      "Policies applied the same way every time",
+      "Faster approvals for employees",
+      "Cleaner records if you're ever audited",
+    ],
+    runtime: "1m 22s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "reading receipt_travel.jpg" },
+      { kind: "ok", text: "merchant + amount extracted" },
+      { kind: "ok", text: "policy check passed" },
+      { kind: "ok", text: "audit summary ready" },
+      { kind: "wait", text: "waiting on approval (Finance Manager)" },
+      { kind: "ok", text: "approved · reimbursement queued" },
+      { kind: "done", text: "done in 1m 22s" },
+    ],
+  },
+  {
+    group: "construction",
+    label: "Construction",
+    title: "RFI Copilot",
+    goal: "Draft technical responses to contractor questions using your drawings and project history.",
+    persona: "Project Engineer",
+    approver: "Project Manager",
+    trigger: "A contractor submits a question by email or Teams.",
+    actions: [
+      "Reads the incoming question and any attachments",
+      "Pulls the relevant drawings automatically",
+      "Looks up how similar questions were answered before",
+      "Writes a technical summary of the issue",
+      "Drafts a response ready for review",
+    ],
+    value: [
+      "Faster answers to the field",
+      "Fewer project delays",
+      "A written record of every decision",
+      "Consistent, accurate technical answers",
+    ],
+    runtime: "4m 12s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "reading Teams message" },
+      { kind: "ok", text: "drawings downloaded" },
+      { kind: "ok", text: "matched project record" },
+      { kind: "ok", text: "technical summary ready" },
+      { kind: "ok", text: "draft response ready" },
+      { kind: "wait", text: "waiting on approval (Project Manager)" },
+      { kind: "ok", text: "approved by K. Malik · reply sent" },
+      { kind: "done", text: "done in 4m 12s" },
+    ],
+  },
+  {
+    group: "construction",
+    label: "Construction",
+    title: "Change Order Copilot",
+    goal: "Estimate the cost and schedule impact of a change request before anyone signs off.",
+    persona: "Project Manager",
+    approver: "Client Representative",
+    trigger: "A contractor or client submits a change request.",
+    actions: [
+      "Reads the requested change and supporting documents",
+      "Compares it against the current budget and schedule",
+      "Calculates the likely cost impact",
+      "Estimates any schedule delay",
+      "Writes a plain-language change order summary",
+    ],
+    value: [
+      "Faster change order turnaround",
+      "More accurate cost estimates",
+      "Fewer disputes down the line",
+      "Tighter budget control",
+    ],
+    runtime: "3m 40s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "reading change request" },
+      { kind: "ok", text: "compared vs budget + schedule" },
+      { kind: "ok", text: "cost impact: +$18,400" },
+      { kind: "ok", text: "schedule impact: +4 days" },
+      { kind: "wait", text: "waiting on approval (Client Rep)" },
+      { kind: "ok", text: "approved · CO logged" },
+      { kind: "done", text: "done in 3m 40s" },
+    ],
+  },
+  {
+    group: "construction",
+    label: "Construction",
+    title: "Daily Site Report Copilot",
+    goal: "Turn the day's photos, notes, and task updates into a finished progress report.",
+    persona: "Site Engineer",
+    approver: "Project Manager",
+    trigger: "End of the workday, automatically.",
+    actions: [
+      "Collects the day's emails and site photos",
+      "Reads handwritten notes on photos",
+      "Pulls task and equipment status",
+      "Summarizes work completed and any delays",
+      "Flags any safety issues that came up",
+    ],
+    value: [
+      "Minutes instead of an hour of paperwork",
+      "Consistent daily reporting",
+      "Earlier visibility into delays",
+      "Better safety tracking",
+    ],
+    runtime: "2m 08s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "collected 24 site photos" },
+      { kind: "ok", text: "handwritten notes parsed" },
+      { kind: "ok", text: "task + equipment status pulled" },
+      { kind: "ok", text: "1 safety issue flagged" },
+      { kind: "ok", text: "progress report drafted" },
+      { kind: "wait", text: "waiting on approval (Project Manager)" },
+      { kind: "done", text: "done in 2m 08s" },
+    ],
+  },
+  {
+    group: "construction",
+    label: "Construction",
+    title: "Subcontractor Invoice Verification",
+    goal: "Check subcontractor invoices against completed work before you approve payment.",
+    persona: "Project Accountant",
+    approver: "Finance Manager",
+    trigger: "A subcontractor sends an invoice.",
+    actions: [
+      "Reads invoice details automatically",
+      "Matches it to the original purchase order",
+      "Compares it against completed work on site",
+      "Flags any overbilling",
+      "Writes a short discrepancy report",
+    ],
+    value: [
+      "Less risk of overpaying",
+      "Faster invoice-to-payment time",
+      "Stronger subcontractor relationships",
+      "A clean audit trail",
+    ],
+    runtime: "2m 55s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "reading subcontractor invoice" },
+      { kind: "ok", text: "matched to PO-2214" },
+      { kind: "ok", text: "compared vs completed work" },
+      { kind: "ok", text: "overbilling flagged: 2 line items" },
+      { kind: "wait", text: "waiting on approval (Finance Manager)" },
+      { kind: "done", text: "done in 2m 55s" },
+    ],
+  },
+  {
+    group: "legal",
+    label: "Legal",
+    title: "Contract Review Copilot",
+    goal: "Flag risky or non-standard clauses and prepare a redline before you review it yourself.",
+    persona: "Legal Counsel",
+    approver: "Senior Counsel",
+    trigger: "A contract lands in your inbox or contract system.",
+    actions: [
+      "Reads the contract and extracts key terms",
+      "Compares clauses against your standard playbook",
+      "Flags risky or missing clauses",
+      "Prepares a redline with suggested edits",
+      "Writes a summary of the key commercial terms",
+    ],
+    value: [
+      "Faster contract turnaround",
+      "Consistent risk review every time",
+      "Fewer surprises after signing",
+      "Faster deal cycles",
+    ],
+    runtime: "5m 06s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "reading MSA_v3.docx" },
+      { kind: "ok", text: "key terms extracted" },
+      { kind: "ok", text: "compared vs playbook" },
+      { kind: "ok", text: "4 clauses flagged" },
+      { kind: "ok", text: "redline prepared" },
+      { kind: "wait", text: "waiting on approval (Senior Counsel)" },
+      { kind: "done", text: "done in 5m 06s" },
+    ],
+  },
+  {
+    group: "legal",
+    label: "Legal",
+    title: "Legal Matter Intake Copilot",
+    goal: "Classify, conflict-check, and route new legal requests to the right person automatically.",
+    persona: "Legal Operations Manager",
+    approver: "Partner",
+    trigger: "A new matter request comes in by form or email.",
+    actions: [
+      "Classifies the type and urgency of the request",
+      "Runs an automatic conflict check",
+      "Recommends who should handle it",
+      "Writes a short intake summary",
+    ],
+    value: [
+      "Faster onboarding for new matters",
+      "Less administrative back-and-forth",
+      "More accurate conflict checks",
+      "Better-balanced workloads",
+    ],
+    runtime: "1m 34s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "classified: commercial · high urgency" },
+      { kind: "ok", text: "conflict check clean" },
+      { kind: "ok", text: "routed to M. Cho" },
+      { kind: "wait", text: "waiting on approval (Partner)" },
+      { kind: "done", text: "done in 1m 34s" },
+    ],
+  },
+  {
+    group: "legal",
+    label: "Legal",
+    title: "Litigation Document Assistant",
+    goal: "Organize case documents and draft a first pass at the facts, ready for attorney review.",
+    persona: "Litigation Associate",
+    approver: "Senior Attorney",
+    trigger: "New discovery documents or a filing come in.",
+    actions: [
+      "Reads through new documents and filings",
+      "Pulls out key facts, dates, and names",
+      "Builds a chronology of the case",
+      "Flags anything inconsistent across documents",
+      "Drafts a first-pass summary",
+    ],
+    value: [
+      "Faster document review",
+      "Fewer billable hours on basic organization",
+      "A clearer case timeline",
+      "Consistent fact-finding across the team",
+    ],
+    runtime: "6m 18s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "reading 42 discovery docs" },
+      { kind: "ok", text: "facts, dates, names extracted" },
+      { kind: "ok", text: "chronology built" },
+      { kind: "ok", text: "2 inconsistencies flagged" },
+      { kind: "wait", text: "waiting on approval (Senior Attorney)" },
+      { kind: "done", text: "done in 6m 18s" },
+    ],
+  },
+  {
+    group: "legal",
+    label: "Legal",
+    title: "Compliance Review Copilot",
+    goal: "Check a policy, process, or piece of marketing against your regulatory requirements.",
+    persona: "Compliance Officer",
+    approver: "General Counsel",
+    trigger: "A business team submits something for compliance review.",
+    actions: [
+      "Checks the submission against applicable regulations",
+      "Flags any non-compliant language",
+      "Checks it against past compliance decisions",
+      "Rates the overall risk level",
+      "Recommends how to fix any issues",
+    ],
+    value: [
+      "Faster compliance turnaround",
+      "Lower regulatory risk",
+      "The same standard applied every time",
+      "A ready audit trail",
+    ],
+    runtime: "2m 47s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "reading campaign_brief.pdf" },
+      { kind: "ok", text: "checked vs regulations" },
+      { kind: "ok", text: "1 non-compliant claim flagged" },
+      { kind: "ok", text: "risk level: medium" },
+      { kind: "wait", text: "waiting on approval (General Counsel)" },
+      { kind: "done", text: "done in 2m 47s" },
+    ],
+  },
+  {
+    group: "legal",
+    label: "Legal",
+    title: "NDA Approval Copilot",
+    goal: "Compare an incoming NDA to your standard template and get it ready to sign.",
+    persona: "Corporate Counsel",
+    approver: "Legal Manager",
+    trigger: "You or an external party send over an NDA.",
+    actions: [
+      "Compares the NDA to your standard template",
+      "Flags any non-standard or risky clauses",
+      "Drafts a standard NDA if none was provided",
+      "Prepares a redline of suggested changes",
+    ],
+    value: [
+      "Faster NDA turnaround",
+      "A consistent approval process",
+      "Fewer legal bottlenecks",
+      "Deals move faster",
+    ],
+    runtime: "1m 58s",
+    trace: [
+      { kind: "run", text: "starting connector…" },
+      { kind: "ok", text: "reading inbound NDA" },
+      { kind: "ok", text: "compared to standard template" },
+      { kind: "ok", text: "2 clauses flagged" },
+      { kind: "ok", text: "redline ready" },
+      { kind: "wait", text: "waiting on approval (Legal Manager)" },
+      { kind: "ok", text: "approved by S. Okafor · sent to sign" },
+      { kind: "done", text: "done in 1m 58s" },
+    ],
+  },
+];
+
 // ---------------- Page ----------------
 
 function Index() {
@@ -220,7 +687,10 @@ function IndexContent() {
 
   return (
     <div
-      className={cn("landing-root min-h-screen bg-background text-foreground", theme === "dark" && "dark")}
+      className={cn(
+        "landing-root min-h-screen bg-background text-foreground",
+        theme === "dark" && "dark",
+      )}
     >
       <Nav onLogin={() => setAuthOpen(true)} />
       <Hero
@@ -230,6 +700,7 @@ function IndexContent() {
         showFallbackNotice={showFallbackNotice}
       />
       <IntegrationCatalog industry={industry} />
+      <CopilotLibrary industry={industry} />
       <CoreDiagram />
       <WorkflowSection content={content} />
       <PlatformGrid />
@@ -256,9 +727,18 @@ function Nav({ onLogin }: { onLogin: () => void }) {
           <span className="text-[15px] font-semibold tracking-tight">Industry AI OS</span>
         </a>
         <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
-          <a href="#integrations" className="transition hover:text-foreground">Integrations</a>
-          <a href="#platform" className="transition hover:text-foreground">Platform</a>
-          <a href="#workflow" className="transition hover:text-foreground">Workflow</a>
+          <a href="#integrations" className="transition hover:text-foreground">
+            Integrations
+          </a>
+          <a href="#copilots" className="transition hover:text-foreground">
+            Copilots
+          </a>
+          <a href="#platform" className="transition hover:text-foreground">
+            Platform
+          </a>
+          <a href="#workflow" className="transition hover:text-foreground">
+            Workflow
+          </a>
         </nav>
         <div className="flex items-center gap-2">
           <button
@@ -336,7 +816,8 @@ function Hero({
 
         {showFallbackNotice && (
           <div className="mt-6 max-w-2xl rounded-lg border border-border bg-surface/70 px-4 py-3 text-sm text-muted-foreground">
-            Deep content for this industry is in active scoping — you're seeing the shared platform view. Talk to us about your stack.
+            Deep content for this industry is in active scoping — you're seeing the shared platform
+            view. Talk to us about your stack.
           </div>
         )}
       </div>
@@ -344,13 +825,7 @@ function Hero({
   );
 }
 
-function IndustryPicker({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function IndustryPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
@@ -358,7 +833,12 @@ function IndustryPicker({
 
   useEffect(() => {
     if (!open) return;
-    setActiveIdx(Math.max(0, INDUSTRIES.findIndex((i) => i.slug === value)));
+    setActiveIdx(
+      Math.max(
+        0,
+        INDUSTRIES.findIndex((i) => i.slug === value),
+      ),
+    );
     const onDoc = (e: MouseEvent) => {
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
@@ -445,9 +925,7 @@ function IndustryPicker({
               >
                 <span
                   className={`grid h-9 w-9 shrink-0 place-items-center rounded-md text-base ${
-                    selected
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-background text-primary"
+                    selected ? "bg-primary text-primary-foreground" : "bg-background text-primary"
                   }`}
                 >
                   {i.icon}
@@ -456,9 +934,7 @@ function IndustryPicker({
                   <span className="block truncate text-sm font-medium text-foreground">
                     {i.label}
                   </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {i.blurb}
-                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">{i.blurb}</span>
                 </span>
                 {selected && (
                   <span className="font-mono text-[10px] uppercase tracking-wider text-primary">
@@ -473,7 +949,6 @@ function IndustryPicker({
     </div>
   );
 }
-
 
 // ---------------- Core diagram ----------------
 
@@ -588,6 +1063,279 @@ function WorkflowSection({ content }: { content: IndustryContent }) {
   );
 }
 
+// ---------------- Copilot library (interactive catalog + modal) ----------------
+
+function CopilotLibrary({ industry }: { industry: string }) {
+  const [active, setActive] = useState<CopilotGroup | "all">("all");
+  const [selected, setSelected] = useState<Copilot | null>(null);
+
+  // If the visitor tailored the hero to an industry we have copilots for,
+  // pre-filter this catalog to match.
+  useEffect(() => {
+    if (industry === "accounting" || industry === "construction" || industry === "legal") {
+      setActive(industry);
+    } else {
+      setActive("all");
+    }
+  }, [industry]);
+
+  const items = useMemo(
+    () => (active === "all" ? COPILOTS : COPILOTS.filter((c) => c.group === active)),
+    [active],
+  );
+
+  return (
+    <section id="copilots" className="border-b border-border/60 bg-surface-2/40 py-20">
+      <div className="mx-auto max-w-7xl px-5">
+        <div className="mb-8 flex flex-col gap-2">
+          <span className="font-mono text-xs uppercase tracking-wider text-primary">
+            Copilot library
+          </span>
+          <h2 className="max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
+            Pick the copilot for the work you want off your plate.
+          </h2>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            Every copilot follows the same shape: it starts on a trigger, handles the busywork with
+            AI, and stops for your approval before anything goes out. Click any card to see how it
+            runs.
+          </p>
+        </div>
+
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-5">
+          <div className="flex flex-wrap gap-1.5">
+            {COPILOT_GROUPS.map((g) => (
+              <CatalogChip
+                key={g.slug}
+                label={g.label}
+                active={active === g.slug}
+                onClick={() => setActive(g.slug)}
+              />
+            ))}
+          </div>
+          <div className="font-mono text-xs text-muted-foreground">
+            Showing <b className="font-medium text-primary">{items.length}</b> of {COPILOTS.length}{" "}
+            copilots
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((c) => (
+            <button
+              key={c.title}
+              onClick={() => setSelected(c)}
+              className="group flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5 text-left transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className="font-mono text-[10px] font-medium uppercase tracking-wider"
+                  style={{ color: GROUP_META[c.group].accent }}
+                >
+                  {c.label}
+                </span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+              </div>
+              <h3 className="text-[17px] font-semibold leading-snug tracking-tight">{c.title}</h3>
+              <p className="flex-1 text-sm text-muted-foreground">{c.goal}</p>
+              <div className="flex items-center justify-between border-t border-dashed border-border pt-3 font-mono text-[11px] text-muted-foreground">
+                <span>{c.persona}</span>
+                <span className="flex items-center gap-1 text-primary">
+                  <ShieldCheck className="h-3 w-3" />
+                  {c.approver}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {selected && <CopilotModal copilot={selected} onClose={() => setSelected(null)} />}
+    </section>
+  );
+}
+
+function CopilotModal({ copilot, onClose }: { copilot: Copilot; onClose: () => void }) {
+  const [step, setStep] = useState(0);
+  const reduceMotion =
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const accent = GROUP_META[copilot.group].accent;
+
+  // Reveal the run trace line by line so the flow reads as something that
+  // actually executes, not a static list.
+  useEffect(() => {
+    setStep(0);
+    if (reduceMotion) {
+      setStep(copilot.trace.length);
+      return;
+    }
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      setStep(i);
+      if (i >= copilot.trace.length) clearInterval(id);
+    }, 340);
+    return () => clearInterval(id);
+  }, [copilot, reduceMotion]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="copilot-title"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-border bg-surface shadow-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 border-b border-border p-6">
+          <div>
+            <span
+              className="font-mono text-[10px] font-medium uppercase tracking-wider"
+              style={{ color: accent }}
+            >
+              {copilot.label}
+            </span>
+            <h3 id="copilot-title" className="mt-1.5 text-2xl font-semibold tracking-tight">
+              {copilot.title}
+            </h3>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">{copilot.goal}</p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="shrink-0 rounded-lg p-2 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="grid gap-0 md:grid-cols-[1fr_320px]">
+          {/* Left: explanation */}
+          <div className="space-y-6 p-6">
+            <div>
+              <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                <Zap className="h-3.5 w-3.5" style={{ color: accent }} /> Starts when
+              </div>
+              <p className="text-sm text-foreground/90">{copilot.trigger}</p>
+            </div>
+
+            <div>
+              <div className="mb-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                What the AI does
+              </div>
+              <ul className="space-y-2">
+                {copilot.actions.map((a) => (
+                  <li key={a} className="flex gap-2.5 text-sm text-foreground/90">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: accent }} />
+                    {a}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex items-center gap-2.5 rounded-lg border border-primary/25 bg-primary/5 px-4 py-3 text-sm text-foreground/90">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+              You stay in control — <b className="font-semibold text-primary">
+                {copilot.approver}
+              </b>{" "}
+              approves before anything ships.
+            </div>
+
+            <div>
+              <div className="mb-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                What you get
+              </div>
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {copilot.value.map((v) => (
+                  <li key={v} className="flex gap-2 text-sm text-muted-foreground">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    {v}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Right: live run trace */}
+          <div className="border-t border-border bg-surface-2/60 p-6 md:border-l md:border-t-0">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                Live run
+              </span>
+              <span className="font-mono text-[11px] text-primary">{copilot.runtime}</span>
+            </div>
+            <div className="space-y-2 font-mono text-[12.5px] leading-relaxed">
+              {copilot.trace.map((line, i) => {
+                const shown = i < step;
+                return (
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex items-start gap-2 transition-opacity duration-300",
+                      shown ? "opacity-100" : "opacity-0",
+                    )}
+                  >
+                    <TraceIcon kind={line.kind} />
+                    <span
+                      className={cn(
+                        line.kind === "wait" && "text-amber-500 dark:text-amber-400",
+                        line.kind === "done" && "font-semibold text-foreground",
+                        line.kind === "run" && "text-muted-foreground",
+                        line.kind === "ok" && "text-foreground/80",
+                      )}
+                    >
+                      {line.text}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 flex flex-col gap-2">
+              <a
+                href="#cta"
+                onClick={onClose}
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+              >
+                Get this copilot
+              </a>
+              <button
+                onClick={onClose}
+                className="inline-flex items-center justify-center rounded-lg border border-border bg-surface px-4 py-2.5 text-sm font-medium text-foreground transition hover:border-primary/50"
+              >
+                Browse more
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TraceIcon({ kind }: { kind: Copilot["trace"][number]["kind"] }) {
+  if (kind === "wait")
+    return <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500 dark:text-amber-400" />;
+  if (kind === "done") return <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />;
+  if (kind === "run")
+    return <span className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground">▸</span>;
+  return <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />;
+}
+
 // ---------------- Integration catalog (Nango-style grid) ----------------
 
 // The industry slugs in the picker map 1:1 onto the catalog categories, so
@@ -620,7 +1368,9 @@ function IntegrationCatalog({ industry }: { industry: string }) {
     <section id="integrations" className="border-b border-border/60 py-20">
       <div className="mx-auto max-w-7xl px-5">
         <div className="mb-8 flex flex-col gap-2 text-center">
-          <span className="font-mono text-xs uppercase tracking-wider text-primary">Integrations</span>
+          <span className="font-mono text-xs uppercase tracking-wider text-primary">
+            Integrations
+          </span>
           <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
             {INTEGRATIONS.length}+ APIs your copilots can talk to.
           </h2>
@@ -694,7 +1444,9 @@ function PlatformGrid() {
     <section className="border-b border-border/60 py-20">
       <div className="mx-auto max-w-7xl px-5">
         <div className="mb-10">
-          <span className="font-mono text-xs uppercase tracking-wider text-primary">Under the hood</span>
+          <span className="font-mono text-xs uppercase tracking-wider text-primary">
+            Under the hood
+          </span>
           <h2 className="mt-2 max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
             Every copilot inherits this.
           </h2>
@@ -729,7 +1481,8 @@ function CTASection({ onLogin }: { onLogin: () => void }) {
           Bring the AI OS to your industry.
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-          Sign in to explore your workspace, or create an account to scope integrations for your stack.
+          Sign in to explore your workspace, or create an account to scope integrations for your
+          stack.
         </p>
         <button
           onClick={onLogin}
@@ -762,8 +1515,8 @@ function Footer() {
               <span className="text-[15px] font-semibold tracking-tight">Industry AI OS</span>
             </div>
             <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-              One AI operating system for every line of business — with the integrations your
-              team already relies on.
+              One AI operating system for every line of business — with the integrations your team
+              already relies on.
             </p>
           </div>
           {columns.map((col) => (
@@ -858,7 +1611,9 @@ function AuthModal({
               {tab === "login" ? "Welcome back" : "Create your account"}
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              {tab === "login" ? "Sign in to your workspace." : "Get access to your industry copilot."}
+              {tab === "login"
+                ? "Sign in to your workspace."
+                : "Get access to your industry copilot."}
             </p>
           </div>
           <button
@@ -936,12 +1691,7 @@ function isEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 }
 
-async function handleSignup(_: {
-  name: string;
-  email: string;
-  company: string;
-  password: string;
-}) {
+async function handleSignup(_: { name: string; email: string; company: string; password: string }) {
   // NOTE: self-serve signup is not backed yet — the backend has no public
   // registration endpoint (Keycloak registration is disabled; users are created
   // by a tenant admin via the identity service). Left as a stub until that
@@ -1027,16 +1777,18 @@ function LoginForm({
         {loading ? "Signing in…" : "Log in"}
       </button>
       <div className="relative my-3">
-        <div className="absolute inset-0 flex items-center"><div className="h-px w-full bg-border" /></div>
+        <div className="absolute inset-0 flex items-center">
+          <div className="h-px w-full bg-border" />
+        </div>
         <div className="relative text-center">
-          <span className="bg-surface px-2 text-[11px] uppercase tracking-wider text-muted-foreground">or</span>
+          <span className="bg-surface px-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+            or
+          </span>
         </div>
       </div>
       <button
         type="button"
-        onClick={() =>
-          setErrors({ form: "SSO isn't wired yet — sign in with email + password." })
-        }
+        onClick={() => setErrors({ form: "SSO isn't wired yet — sign in with email + password." })}
         className="w-full rounded-md border border-border bg-background py-2 text-sm font-medium hover:border-primary"
       >
         Continue with SSO
@@ -1078,16 +1830,41 @@ function SignupForm({
   return (
     <form onSubmit={submit} className="space-y-3" noValidate>
       <Field label="Full name" error={errors.name}>
-        <input ref={firstFieldRef} value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="Ada Lovelace" />
+        <input
+          ref={firstFieldRef}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className={inputCls}
+          placeholder="Ada Lovelace"
+        />
       </Field>
       <Field label="Work email" error={errors.email}>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} placeholder="you@company.com" autoComplete="email" />
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={inputCls}
+          placeholder="you@company.com"
+          autoComplete="email"
+        />
       </Field>
       <Field label="Company" error={errors.company}>
-        <input value={company} onChange={(e) => setCompany(e.target.value)} className={inputCls} placeholder="Acme LLP" />
+        <input
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          className={inputCls}
+          placeholder="Acme LLP"
+        />
       </Field>
       <Field label="Password" error={errors.password}>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} placeholder="At least 8 characters" autoComplete="new-password" />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className={inputCls}
+          placeholder="At least 8 characters"
+          autoComplete="new-password"
+        />
       </Field>
       <button
         type="submit"
