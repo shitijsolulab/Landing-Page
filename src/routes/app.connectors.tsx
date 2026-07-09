@@ -18,7 +18,8 @@ function Connectors() {
     const q = query.trim().toLowerCase();
     return INTEGRATIONS.filter((i) => {
       const matchesCat = active === "all" || i.category === active;
-      const matchesQuery = !q || i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q);
+      const matchesQuery =
+        !q || i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q);
       return matchesCat && matchesQuery;
     });
   }, [query, active]);
@@ -65,15 +66,7 @@ function Connectors() {
   );
 }
 
-function Chip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -97,7 +90,12 @@ function IntegrationCard({ integration }: { integration: Integration }) {
   return (
     <div className="group relative flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 transition hover:border-primary/50 hover:shadow-sm">
       <div className="flex items-start justify-between">
-        <IntegrationLogo name={integration.name} domain={integration.domain} className="h-11 w-11" />
+        <IntegrationLogo
+          name={integration.name}
+          domain={integration.domain}
+          logo={integration.logo}
+          className="h-11 w-11"
+        />
         <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
           {integration.auth ? "Auth" : "Action"}
         </span>

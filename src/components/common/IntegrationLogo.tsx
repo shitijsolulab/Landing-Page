@@ -8,15 +8,19 @@ import { cn } from "../../lib/utils";
 export function IntegrationLogo({
   name,
   domain,
+  logo,
   className,
 }: {
   name: string;
   domain?: string;
+  logo?: string;
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
 
-  if (!domain || failed) {
+  const src = logo ?? (domain ? logoUrl(domain) : undefined);
+
+  if (!src || failed) {
     return (
       <span
         className={cn(
@@ -37,7 +41,7 @@ export function IntegrationLogo({
       )}
     >
       <img
-        src={logoUrl(domain)}
+        src={src}
         alt=""
         loading="lazy"
         onError={() => setFailed(true)}

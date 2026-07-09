@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { X } from "lucide-react";
 
+import { LogoLockup } from "../common/LogoLockup";
 import { useSession } from "../../lib/session";
 import { NAV } from "./nav";
 
@@ -31,11 +32,8 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 function Brand() {
   return (
-    <div className="flex h-14 items-center gap-2.5 border-b border-border px-5">
-      <span className="grid h-7 w-7 place-items-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-        AI
-      </span>
-      <span className="text-sm font-semibold tracking-tight">Industry AI OS</span>
+    <div className="flex h-14 items-center border-b border-border px-5">
+      <LogoLockup />
     </div>
   );
 }

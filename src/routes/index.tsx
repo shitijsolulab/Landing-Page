@@ -4,19 +4,30 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  FileText,
+  Mail,
+  MessageSquare,
   Moon,
+  Settings2,
+  Share2,
   ShieldCheck,
   Sparkles,
   Sun,
+  User,
+  Wand2,
+  Workflow,
   X,
+  XCircle,
   Zap,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiError, api } from "../lib/api";
 import { CATEGORIES, INTEGRATIONS } from "../lib/catalog";
 import type { IntegrationCategory } from "../lib/catalog";
 import { IntegrationLogo } from "../components/common/IntegrationLogo";
+import { LogoLockup } from "../components/common/LogoLockup";
 import { setStoredIndustry } from "../lib/industries";
 import { ThemeProvider, useTheme } from "../lib/theme";
 import { cn } from "../lib/utils";
@@ -64,12 +75,12 @@ const INDUSTRY_CONTENT: Record<string, IndustryContent> = {
       before: "Manual triage across email, files, and 3+ business systems.",
       after: "AI drafts, checks, and executes. A human reviews and approves.",
       steps: [
-        { label: "Intake", detail: "Email, file, or chat message arrives." },
-        { label: "Parse", detail: "Document intelligence extracts structured data." },
-        { label: "Enrich", detail: "Connector hub pulls context from your business systems." },
-        { label: "Draft", detail: "AI produces a response, record, or action." },
-        { label: "Approve", detail: "Human reviews and clicks approve." },
-        { label: "Execute", detail: "Action written back into your system of record." },
+        { label: "Intake", detail: "An email, file, or chat message comes in." },
+        { label: "Parse", detail: "Document intelligence extracts the key data." },
+        { label: "Enrich", detail: "Connectors pull context from your systems." },
+        { label: "Draft", detail: "AI drafts the response, record, or action." },
+        { label: "Approve", detail: "A human reviews the draft and approves it." },
+        { label: "Execute", detail: "The action is written back to your system." },
       ],
     },
     connectors: {
@@ -720,11 +731,8 @@ function Nav({ onLogin }: { onLogin: () => void }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5">
-        <a href="#" className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-            AI
-          </span>
-          <span className="text-[15px] font-semibold tracking-tight">Industry AI OS</span>
+        <a href="#" className="flex items-center">
+          <LogoLockup className="ml-2" />
         </a>
         <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
           <a href="#integrations" className="transition hover:text-foreground">
@@ -953,35 +961,73 @@ function IndustryPicker({ value, onChange }: { value: string; onChange: (v: stri
 // ---------------- Core diagram ----------------
 
 function CoreDiagram() {
-  const spokes = [
-    "Identity",
-    "AI Chat",
-    "Workflow Engine",
-    "Document Intelligence",
-    "Connector Hub",
-    "Admin",
+  const spokes: { name: string; icon: LucideIcon; desc: string }[] = [
+    {
+      name: "Identity",
+      icon: ShieldCheck,
+      desc: "SSO, roles, and audit trails so the right people see the right things.",
+    },
+    {
+      name: "AI Chat",
+      icon: MessageSquare,
+      desc: "Ask questions and get answers grounded in your own documents and data.",
+    },
+    {
+      name: "Workflow Engine",
+      icon: Workflow,
+      desc: "Runs each task step by step, with human approvals and retries built in.",
+    },
+    {
+      name: "Document Intelligence",
+      icon: FileText,
+      desc: "Reads PDFs, emails, and scans, then pulls out the structured data.",
+    },
+    {
+      name: "Connector Hub",
+      icon: Share2,
+      desc: "One place to securely connect the tools your team already works in.",
+    },
+    {
+      name: "Admin",
+      icon: Settings2,
+      desc: "Control usage, cost, access, and safety from a single dashboard.",
+    },
   ];
   return (
     <section id="platform" className="border-b border-border/60 py-20">
       <div className="mx-auto max-w-7xl px-5">
-        <div className="mb-12 flex flex-col gap-2">
+        <div className="mb-12 flex max-w-2xl flex-col gap-3">
           <span className="font-mono text-xs uppercase tracking-wider text-primary">
             The shared core
           </span>
-          <h2 className="max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
             Every copilot runs on the same operating system.
           </h2>
+          <p className="text-sm text-muted-foreground md:text-base">
+            Instead of rebuilding the basics for every use case, each copilot inherits the same six
+            building blocks. Turn one on and identity, chat, workflows, documents, connectors, and
+            admin all come with it — already wired together.
+          </p>
         </div>
-        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-4 md:grid-cols-3">
-          {spokes.map((s, i) => (
-            <div
-              key={s}
-              className="rounded-xl border border-border bg-surface p-5 transition hover:border-primary/60"
-            >
-              <div className="mb-3 font-mono text-xs text-muted-foreground">0{i + 1}</div>
-              <div className="text-base font-medium">{s}</div>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {spokes.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <div
+                key={s.name}
+                className="group rounded-xl border border-border bg-surface p-5 transition duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-md"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <span className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-background text-muted-foreground transition group-hover:border-primary/40 group-hover:text-primary">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="font-mono text-xs text-muted-foreground">0{i + 1}</span>
+                </div>
+                <div className="text-base font-semibold">{s.name}</div>
+                <p className="mt-1.5 text-sm text-muted-foreground">{s.desc}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -990,14 +1036,56 @@ function CoreDiagram() {
 
 // ---------------- Workflow ----------------
 
+// Adds an `in-view` class the first time the element scrolls into the viewport,
+// so CSS-driven reveal/draw animations fire on scroll. No-op re-observes after.
+function useInView<T extends HTMLElement>(rootMargin = "0px 0px -12% 0px") {
+  const ref = useRef<T>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          obs.disconnect();
+        }
+      },
+      { rootMargin, threshold: 0.15 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [rootMargin]);
+  return { ref, inView };
+}
+
 function WorkflowSection({ content }: { content: IndustryContent }) {
   const { workflow } = content;
+  const heading = useInView<HTMLDivElement>();
+  const before = useInView<HTMLDivElement>();
+  const after = useInView<HTMLDivElement>();
+  const timeline = useInView<HTMLDivElement>();
+
   return (
-    <section id="workflow" className="border-b border-border/60 bg-surface-2 py-20">
-      <div className="mx-auto max-w-5xl px-5">
-        <div className="mb-12 flex flex-col items-center gap-3 text-center">
-          <span className="font-mono text-xs uppercase tracking-wider text-primary">
-            Workflow example
+    <section
+      id="workflow"
+      className="relative overflow-hidden border-b border-border/60 bg-surface-2 py-20"
+    >
+      {/* soft ambient glow behind the section */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-0 h-80 w-[46rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+      />
+      <div className="relative mx-auto max-w-5xl px-5">
+        <div
+          ref={heading.ref}
+          className={cn(
+            "reveal mb-12 flex flex-col items-center gap-3 text-center",
+            heading.inView && "in-view",
+          )}
+        >
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1 font-mono text-xs uppercase tracking-wider text-primary">
+            <Sparkles className="h-3 w-3" /> Workflow example
           </span>
           <h2 className="max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
             {workflow.title}
@@ -1008,10 +1096,16 @@ function WorkflowSection({ content }: { content: IndustryContent }) {
         </div>
 
         {/* Before → After contrast */}
-        <div className="mb-14 grid items-stretch gap-4 md:grid-cols-[1fr_auto_1fr]">
-          <div className="rounded-2xl border border-border bg-background p-6">
+        <div className="relative mb-16 grid items-stretch gap-4 md:grid-cols-[1fr_auto_1fr]">
+          <div
+            ref={before.ref}
+            className={cn(
+              "reveal rounded-2xl border border-border bg-surface/40 p-6 transition duration-300 hover:-translate-y-1 hover:border-border/80",
+              before.inView && "in-view",
+            )}
+          >
             <div className="mb-3 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <XCircle className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Before
               </span>
@@ -1019,11 +1113,23 @@ function WorkflowSection({ content }: { content: IndustryContent }) {
             <p className="text-sm text-foreground/80">{workflow.before}</p>
           </div>
           <div className="flex items-center justify-center py-2 md:py-0">
-            <div className="grid h-10 w-10 place-items-center rounded-full border border-border bg-background text-muted-foreground">
-              <ArrowRight className="h-5 w-5" />
+            {/* dashed connector + arrow node */}
+            <span
+              aria-hidden
+              className="absolute left-1/2 hidden h-px w-24 -translate-x-1/2 border-t border-dashed border-border md:block"
+            />
+            <div className="relative z-10 grid h-11 w-11 place-items-center rounded-full border border-primary/40 bg-background text-primary shadow-[0_0_0_5px_var(--surface-2)]">
+              <ArrowRight className="arrow-float h-5 w-5" />
             </div>
           </div>
-          <div className="rounded-2xl border border-primary/30 bg-primary/5 p-6 ring-1 ring-primary/10">
+          <div
+            ref={after.ref}
+            className={cn(
+              "reveal rounded-2xl border border-primary/40 bg-primary/5 p-6 shadow-[0_0_30px_-8px_var(--primary)] transition duration-300 hover:-translate-y-1",
+              after.inView && "in-view",
+            )}
+            style={{ transitionDelay: after.inView ? "120ms" : "0ms" }}
+          >
             <div className="mb-3 flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
               <span className="text-xs font-semibold uppercase tracking-wider text-primary">
@@ -1035,33 +1141,66 @@ function WorkflowSection({ content }: { content: IndustryContent }) {
         </div>
 
         {/* Connected step timeline */}
-        <ol className="relative mx-auto max-w-2xl">
-          {workflow.steps.map((s, i) => {
-            const last = i === workflow.steps.length - 1;
-            return (
-              <li key={s.label} className="relative flex gap-5 pb-8 last:pb-0">
-                {/* rail */}
-                {!last && (
-                  <span
-                    className="absolute left-[19px] top-10 h-[calc(100%-1.5rem)] w-px bg-border"
-                    aria-hidden
-                  />
-                )}
-                <span className="z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-primary/30 bg-background text-sm font-semibold text-primary">
-                  {i + 1}
-                </span>
-                <div className="pt-1.5">
-                  <div className="text-[15px] font-semibold text-foreground">{s.label}</div>
-                  <p className="mt-1 text-sm text-muted-foreground">{s.detail}</p>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+        <div ref={timeline.ref} className="relative">
+          {/* far-left vertical rail + terminating arrow */}
+          <span
+            aria-hidden
+            className={cn(
+              "rail-draw absolute left-[19px] top-5 bottom-8 w-0.5 bg-gradient-to-b from-primary/50 via-border to-border",
+              timeline.inView && "in-view",
+            )}
+          />
+
+          <ol className="relative space-y-3">
+            {workflow.steps.map((s, i) => {
+              const Icon = STEP_ICONS[i] ?? Sparkles;
+              return (
+                <li key={s.label} className="relative flex items-center gap-3">
+                  {/* numbered badge sitting on the rail */}
+                  <div className="relative z-10 flex w-10 shrink-0 justify-center">
+                    <span
+                      className={cn(
+                        "reveal grid h-8 w-8 place-items-center rounded-full border border-primary/50 bg-background text-xs font-semibold text-primary shadow-[0_0_0_4px_var(--surface-2),0_0_12px_-2px_var(--primary)]",
+                        timeline.inView && "in-view",
+                      )}
+                      style={{ transitionDelay: `${i * 80}ms` }}
+                    >
+                      {i + 1}
+                    </span>
+                  </div>
+                  {/* connector dot */}
+                  <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/50" />
+                  {/* step card */}
+                  <div
+                    className={cn(
+                      "reveal grid flex-1 grid-cols-1 overflow-hidden rounded-xl border border-border/70 bg-gradient-to-br from-surface/70 to-surface-2/50 transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 sm:grid-cols-[minmax(180px,240px)_1fr]",
+                      timeline.inView && "in-view",
+                    )}
+                    style={{ transitionDelay: `${i * 80 + 60}ms` }}
+                  >
+                    <div className="flex items-center gap-4 px-5 py-4">
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border bg-background/60 text-muted-foreground">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="text-[15px] font-semibold text-foreground">{s.label}</span>
+                    </div>
+                    <div className="flex items-center border-t border-border/60 px-5 py-4 text-sm text-muted-foreground sm:border-l sm:border-t-0">
+                      {s.detail}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
       </div>
     </section>
   );
 }
+
+// Icons for the six-step flow, assigned by position (every industry follows the
+// same intake → parse → enrich → draft → approve → execute shape).
+const STEP_ICONS: LucideIcon[] = [Mail, FileText, Share2, Wand2, User, CheckCircle2];
 
 // ---------------- Copilot library (interactive catalog + modal) ----------------
 
@@ -1198,7 +1337,7 @@ function CopilotModal({ copilot, onClose }: { copilot: Copilot; onClose: () => v
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-border bg-surface shadow-2xl"
+        className="nice-scroll max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-border bg-surface shadow-2xl"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-border p-6">
@@ -1393,7 +1532,12 @@ function IntegrationCatalog({ industry }: { industry: string }) {
               key={i.slug}
               className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface p-5 text-center transition hover:border-primary/50 hover:shadow-sm"
             >
-              <IntegrationLogo name={i.name} domain={i.domain} className="h-12 w-12" />
+              <IntegrationLogo
+                name={i.name}
+                domain={i.domain}
+                logo={i.logo}
+                className="h-12 w-12"
+              />
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium">{i.name}</div>
                 <div className="text-[11px] text-muted-foreground">{i.category}</div>
@@ -1508,11 +1652,8 @@ function Footer() {
       <div className="mx-auto max-w-7xl px-5 py-14">
         <div className="grid gap-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-                AI
-              </span>
-              <span className="text-[15px] font-semibold tracking-tight">Industry AI OS</span>
+            <div className="flex items-center">
+              <LogoLockup />
             </div>
             <p className="mt-4 max-w-xs text-sm text-muted-foreground">
               One AI operating system for every line of business — with the integrations your team

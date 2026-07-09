@@ -78,18 +78,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Industry AI OS — One AI platform for every line of business" },
-      { name: "description", content: "A shared AI operating system with industry-specific copilots. Connect your email, files, and business systems — get AI that actually takes action." },
+      {
+        name: "description",
+        content:
+          "A shared AI operating system with industry-specific copilots. Connect your email, files, and business systems — get AI that actually takes action.",
+      },
       { property: "og:title", content: "Industry AI OS" },
-      { property: "og:description", content: "One AI operating system. Industry-specific copilots for accounting, legal, construction and more." },
+      {
+        property: "og:description",
+        content:
+          "One AI operating system. Industry-specific copilots for accounting, legal, construction and more.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/logo-light.png", type: "image/png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
