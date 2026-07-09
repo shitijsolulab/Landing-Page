@@ -73,7 +73,9 @@ export const INTEGRATIONS: Integration[] = [
 ];
 
 export function logoUrl(domain: string): string {
-  return `https://logo.clearbit.com/${domain}`;
+  // Google's favicon service returns the site's real brand icon and is far more
+  // reliable than the (now-defunct) Clearbit logo CDN. sz=128 keeps it crisp.
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 }
 
 export function initials(name: string): string {

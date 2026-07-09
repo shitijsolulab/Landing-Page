@@ -41,7 +41,7 @@ export function IntegrationLogo({
         alt=""
         loading="lazy"
         onError={() => setFailed(true)}
-        className="h-3/5 w-3/5 object-contain"
+        className="h-4/5 w-4/5 object-contain"
       />
     </span>
   );
