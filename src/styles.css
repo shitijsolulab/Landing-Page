@@ -91,13 +91,16 @@
   * {
     border-color: var(--color-border);
   }
-  html, body {
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-display);
     -webkit-font-smoothing: antialiased;
   }
-  .font-mono { font-family: var(--font-mono); }
+  .font-mono {
+    font-family: var(--font-mono);
+  }
 }
 
 @utility grid-bg {
@@ -157,12 +160,12 @@
   --secondary-foreground: oklch(0.96 0.004 260);
   --muted: oklch(0.27 0.01 260);
   --muted-foreground: oklch(0.72 0.014 260);
-  --accent: oklch(0.32 0.03 258);
-  --accent-foreground: oklch(0.9 0.03 258);
+  --accent: oklch(0.32 0.04 274);
+  --accent-foreground: oklch(0.9 0.04 274);
   --destructive: oklch(0.62 0.2 27);
   --border: oklch(0.32 0.008 260);
   --input: oklch(0.3 0.01 260);
-  --ring: oklch(0.65 0.14 258);
+  --ring: oklch(0.68 0.17 274);
 }
 
 /* Inside the shell, use the clean system UI font, not the display font. */
@@ -225,18 +228,44 @@
   transform: scaleY(1);
 }
 @keyframes float-arrow {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(4px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
 }
-.arrow-float { animation: float-arrow 1.8s ease-in-out infinite; }
+.arrow-float {
+  animation: float-arrow 1.8s ease-in-out infinite;
+}
 @keyframes bob {
-  0%, 100% { transform: translateY(0); opacity: 0.5; }
-  50% { transform: translateY(3px); opacity: 1; }
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(3px);
+    opacity: 1;
+  }
 }
-.arrow-bob { animation: bob 1.6s ease-in-out infinite; }
+.arrow-bob {
+  animation: bob 1.6s ease-in-out infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1; transform: none; transition: none; }
-  .rail-draw { transform: none; transition: none; }
-  .arrow-float, .arrow-bob { animation: none; }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .rail-draw {
+    transform: none;
+    transition: none;
+  }
+  .arrow-float,
+  .arrow-bob {
+    animation: none;
+  }
 }

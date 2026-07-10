@@ -1,23 +1,94 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { BarChart3 } from "lucide-react";
+import { Cable, CheckCircle2, Clock, FileText, MessagesSquare, Workflow } from "lucide-react";
 
 import { PageHeader } from "../components/common/PageHeader";
-import { EmptyState } from "../components/common/states";
+import { StatCard } from "../components/common/StatCard";
+import { api } from "../lib/api";
+import { useSession } from "../lib/session";
 
 export const Route = createFileRoute("/app/analytics")({ component: Analytics });
 
 function Analytics() {
+  const { isManager } = useSession();
+  const workflows = useQuery({ queryKey: ["workflows"], queryFn: api.listWorkflows });
+  const documents = useQuery({ queryKey: ["documents"], queryFn: api.listDocuments });
+  const connectors = useQuery({ queryKey: ["connectors"], queryFn: api.listConnectors });
+  const audit = useQuery({
+    queryKey: ["audit", "all"],
+    queryFn: () => api.listAuditEvents({ limit: 500 }),
+    enabled: isManager,
+  });
+
+  const wf = workflows.data ?? [];
+  const decided = wf.filter((w) => w.decision);
+  const avgApprovalMins =
+    decided.length > 0
+      ? Math.round(
+          decided.reduce(
+            (sum, w) =>
+              sum + (new Date(w.updated_at).getTime() - new Date(w.created_at).getTime()) / 60000,
+            0,
+          ) / decided.length,
+        )
+      : null;
+
+  const docsProcessed = (documents.data ?? []).filter((d) => d.status === "processed").length;
+  const connectorUsage = (audit.data ?? []).filter((e) => e.action === "connector.invoke").length;
+  const aiRequests = (audit.data ?? []).filter((e) => e.action === "chat.message").length;
+
   return (
     <div>
       <PageHeader
         title="Analytics"
-        description="Usage across AI, workflows, approvals, and connectors."
+        description="Usage across AI, workflows, approvals, and connectors — derived from live platform activity."
       />
-      <EmptyState
-        icon={BarChart3}
-        title="Analytics is being built"
-        description="Generic metrics (AI requests, workflow executions, approval times, documents processed, connector usage) derived from existing data — arrive next. No dedicated metrics API exists yet, so these will be computed from the real list endpoints."
-      />
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <StatCard
+          label="AI Requests"
+          value={isManager ? aiRequests : "—"}
+          icon={MessagesSquare}
+          loading={isManager && audit.isLoading}
+          hint={isManager ? "from audit log" : "admins only"}
+        />
+        <StatCard
+          label="Workflow Executions"
+          value={wf.length}
+          icon={Workflow}
+          loading={workflows.isLoading}
+        />
+        <StatCard
+          label="Approvals Completed"
+          value={decided.length}
+          icon={CheckCircle2}
+          loading={workflows.isLoading}
+        />
+        <StatCard
+          label="Avg. Approval Time"
+          value={avgApprovalMins != null ? `${avgApprovalMins}m` : "—"}
+          icon={Clock}
+          loading={workflows.isLoading}
+        />
+        <StatCard
+          label="Documents Processed"
+          value={docsProcessed}
+          icon={FileText}
+          loading={documents.isLoading}
+        />
+        <StatCard
+          label="Connector Invocations"
+          value={isManager ? connectorUsage : "—"}
+          icon={Cable}
+          loading={isManager && audit.isLoading}
+          hint={isManager ? "from audit log" : "admins only"}
+        />
+      </div>
+
+      <p className="mt-6 text-xs text-muted-foreground">
+        Metrics are computed from the workflows, documents, connectors, and audit endpoints. A
+        dedicated time-series analytics API is not yet available on the backend.
+      </p>
     </div>
   );
 }
